@@ -1,0 +1,60 @@
+import sys
+
+def read_input():
+    graph = {}
+    for line in sys.stdin:
+        if line.strip() == '':  # 空行で入力を終了
+            break
+        parts = line.strip().split(',')
+        start, end, distance = int(parts[0].strip()), int(parts[1].strip()), float(parts[2].strip().replace(',', '.'))
+        
+        if start not in graph:
+            graph[start] = []
+        if end not in graph:
+            graph[end] = []
+        
+        graph[start].append((end, distance))
+    
+    return graph
+
+def dfs(graph, node, visited):
+    max_distance = 0
+    path = []
+    for neighbor, distance in graph[node]:
+        if neighbor not in visited:
+            visited.add(neighbor)
+            current_distance, current_path = dfs(graph, neighbor, visited)
+            visited.remove(neighbor)
+            current_distance += distance
+            if current_distance > max_distance:
+                max_distance = current_distance
+                path = [neighbor] + current_path
+    return max_distance, path
+
+def find_longest_path(graph):
+    longest_path = 0
+    best_path = []
+    for start_node in graph:
+        visited = set()
+        visited.add(start_node)
+        current_distance, current_path = dfs(graph, start_node, visited)
+        if current_distance > longest_path:
+            longest_path = current_distance
+            best_path = [start_node] + current_path
+
+    # 終点から始点への道があるか確認し、あれば始点を再度追加
+    if best_path and best_path[-1] in graph:
+        if best_path[0] in [neighbor for neighbor, _ in graph[best_path[-1]]]:
+            best_path.append(best_path[0])
+    
+    return best_path
+
+# グラフを読み込む
+graph = read_input()
+
+# 最長経路を探す
+longest_path = find_longest_path(graph)
+
+# 結果を出力する
+for node in longest_path:
+    print(node)
